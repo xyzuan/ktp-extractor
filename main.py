@@ -41,8 +41,9 @@ def process_image():
             print(f'OCR processing {file_path}')
             ocr.process_ocr(file_path)
 
-            img_name = file.filename.split('/')[-1].split('.')[0]
-            ocr_path = os.path.join(cfg.json_loc, f'ocr_{img_name}.npy')
+            original_filename_only = os.path.basename(file_path).rsplit('.', 1)[0]
+            ocr_filename = f"ocr_{original_filename_only}.npy"
+            ocr_path = os.path.join(cfg.json_loc, ocr_filename)
 
             print(f'Extracting data from {ocr_path}')
             extracted_data = extractor.process_extract_entities(ocr_path)
@@ -62,4 +63,4 @@ def process_image():
     return jsonify({"error": "Unknown error occurred"}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
