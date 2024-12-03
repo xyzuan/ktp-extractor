@@ -82,26 +82,23 @@ def calDeg(x1,y1,x2,y2):
 
 def convert_format(text_response):
     ls_word = []
-    if ('textAnnotations' in text_response):
-        for text in text_response['textAnnotations']:
-            boxes = {}
-            boxes['label'] = text['description']
+    for item in text_response:
+        boxes = {}
+        boxes['label'] = item['text']
+        boxes['x1'] = item['bounding_box'][0]
+        boxes['y1'] = item['bounding_box'][1]
+        boxes['x2'] = item['bounding_box'][2]
+        boxes['y2'] = item['bounding_box'][3]
+        boxes['x3'] = item['bounding_box'][4]
+        boxes['y3'] = item['bounding_box'][5]
+        boxes['x4'] = item['bounding_box'][6]
+        boxes['y4'] = item['bounding_box'][7]
 
-            boxes['x1'] = text['boundingPoly']['vertices'][0].get('x',0)
-            boxes['y1'] = text['boundingPoly']['vertices'][0].get('y',0)
-            boxes['x2'] = text['boundingPoly']['vertices'][1].get('x',0)
-            boxes['y2'] = text['boundingPoly']['vertices'][1].get('y',0)
-            boxes['x3'] = text['boundingPoly']['vertices'][2].get('x',0)
-            boxes['y3'] = text['boundingPoly']['vertices'][2].get('y',0)
-            boxes['x4'] = text['boundingPoly']['vertices'][3].get('x',0)
-            boxes['y4'] = text['boundingPoly']['vertices'][3].get('y',0)
-
-            boxes['w'] = boxes['x3'] - boxes['x1']
-            boxes['h'] = boxes['y3'] - boxes['y1']
-
-            #print(boxes)
-            ls_word.append(boxes)
+        boxes['w'] = boxes['x3'] - boxes['x1']
+        boxes['h'] = boxes['y3'] - boxes['y1']
+        ls_word.append(boxes)
     return ls_word
+
 
 def get_attribute_ktp(ls_word,field_name,field_keywords,typo_tolerance, debug_mode=False):
     if(len(ls_word)==0):
@@ -336,22 +333,22 @@ def find_occupation(occ):
 
 
 fields_ktp = [
-    {'field_name': 'provinsi', 'keywords': 'provinsi', 'typo_tolerance': 2},
-    {'field_name': 'kota', 'keywords': 'kabupaten', 'typo_tolerance': 2},
+    {'field_name': 'provinsi', 'keywords': 'provinsi', 'typo_tolerance': 6},
+    {'field_name': 'kota', 'keywords': 'kabupaten', 'typo_tolerance': 10},
     {'field_name': 'nik', 'keywords': 'nik', 'typo_tolerance': 1},
     {'field_name': 'nama', 'keywords': 'nama', 'typo_tolerance': 2},
-    {'field_name': 'ttl', 'keywords': 'tempat/tgl', 'typo_tolerance': 5},
+    {'field_name': 'ttl', 'keywords': 'tempat/tgl', 'typo_tolerance': 10},
     {'field_name': 'jenis_kelamin', 'keywords': 'kelamin', 'typo_tolerance': 3},
-    {'field_name': 'gol_darah', 'keywords': 'darah', 'typo_tolerance': 3},
+    {'field_name': 'gol_darah', 'keywords': 'gol. darah', 'typo_tolerance': 6},
     {'field_name': 'alamat', 'keywords': 'alamat', 'typo_tolerance': 2},
     {'field_name': 'rt_rw', 'keywords': 'rt/rw', 'typo_tolerance': 2},
     {'field_name': 'kel_desa', 'keywords': 'kel/desa', 'typo_tolerance': 3},
     {'field_name': 'kecamatan', 'keywords': 'kecamatan', 'typo_tolerance': 3},
     {'field_name': 'agama', 'keywords': 'agama', 'typo_tolerance': 3},
-    {'field_name': 'status_perkawinan', 'keywords': 'perkawinan', 'typo_tolerance': 4},
+    {'field_name': 'status_perkawinan', 'keywords': 'status perkawinan', 'typo_tolerance': 10},
     {'field_name': 'pekerjaan', 'keywords': 'pekerjaan', 'typo_tolerance': 4},
-    {'field_name': 'kewarganegaraan', 'keywords': 'kewarganegaraan', 'typo_tolerance': 4},
-    {'field_name': 'berlaku_hingga', 'keywords': 'berlaku', 'typo_tolerance': 4}
+    {'field_name': 'kewarganegaraan', 'keywords': 'kewarganegaraan', 'typo_tolerance': 10},
+    {'field_name': 'berlaku_hingga', 'keywords': 'berlaku hingga', 'typo_tolerance': 6}
 ]
 
 def extract_ktp_data(text_response,debug_mode=False):
@@ -362,6 +359,8 @@ def extract_ktp_data(text_response,debug_mode=False):
     attributes = {}
 
     ls_word = convert_format(text_response)
+
+    print(ls_word)
 
     if(len(ls_word)==0):
         attributes['state'] = "rejected"
@@ -469,17 +468,22 @@ def extract_ktp_data(text_response,debug_mode=False):
     return ktp_extract
 
 def process_extract_entities(ocr_path):
-        try:
-            text_response = np.load(ocr_path).item()
-        except:
-            print(ocr_path+' cannot be loaded')
+    try:
+        text_response = np.load(ocr_path, allow_pickle=True)
+    except Exception as e:
+        print(f"Error: {ocr_path} cannot be loaded. Reason: {e}")
+        return  # Exit the function if loading fails
 
-        ktp_extract = extract_ktp_data(text_response)
+    ktp_extract = extract_ktp_data(text_response)
+
+    if not ktp_extract.empty:
         print(ktp_extract.iloc[0])
+    else:
+        print("No data extracted from OCR response.")
 
-        ocr_name = ocr_path.split('/')[-1].split('.')[0]
-        output_name = cfg.output_loc+'data_'+ocr_name+'.csv'
-        ktp_extract.to_csv(output_name,index=False)
+    ocr_name = ocr_path.split('/')[-1].split('.')[0]
+    output_name = cfg.output_loc + f'data_{ocr_name}.csv'
+    ktp_extract.to_csv(output_name, index=False)
 
 if __name__ == '__main__':
     if(len(sys.argv) > 1):
