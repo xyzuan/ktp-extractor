@@ -472,18 +472,16 @@ def process_extract_entities(ocr_path):
         text_response = np.load(ocr_path, allow_pickle=True)
     except Exception as e:
         print(f"Error: {ocr_path} cannot be loaded. Reason: {e}")
-        return  # Exit the function if loading fails
+        return None
 
     ktp_extract = extract_ktp_data(text_response)
 
     if not ktp_extract.empty:
-        print(ktp_extract.iloc[0])
+        print("Data extracted successfully:")
+        return ktp_extract
     else:
         print("No data extracted from OCR response.")
-
-    ocr_name = ocr_path.split('/')[-1].split('.')[0]
-    output_name = cfg.output_loc + f'data_{ocr_name}.csv'
-    ktp_extract.to_csv(output_name, index=False)
+        return None
 
 if __name__ == '__main__':
     if(len(sys.argv) > 1):
