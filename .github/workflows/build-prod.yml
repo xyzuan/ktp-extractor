@@ -112,6 +112,7 @@ jobs:
             --with-registry-auth \
             --restart-condition any \
             --network nginx_swarm \
+            --constraint node.role==manager \
             -e AZURE_ENDPOINT=${{ secrets.AZURE_ENDPOINT }} \
             -e AZURE_SUBSCRIPTION_KEY=${{ secrets.AZURE_SUBSCRIPTION_KEY }} \
             -p ${{ env.PORT }}:${{ env.PORT }} \
