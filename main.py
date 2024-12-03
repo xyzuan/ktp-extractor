@@ -4,10 +4,11 @@ import ocr_text_extractor as ocr
 import ktp_entity_extractor as extractor
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from datetime import datetime
 
-
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "https://ngubalan.xyzuan.my.id"]}})
 
 UPLOAD_FOLDER = './uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
