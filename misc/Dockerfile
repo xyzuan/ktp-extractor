@@ -1,6 +1,6 @@
 FROM python:3.9-slim
 
-ENV FLASK_APP=app.py
+ENV FLASK_APP=main.py
 ENV FLASK_ENV=production
 
 WORKDIR /app
